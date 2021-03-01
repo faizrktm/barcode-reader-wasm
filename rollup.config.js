@@ -1,6 +1,6 @@
 import svelte from 'rollup-plugin-svelte';
 import commonjs from '@rollup/plugin-commonjs';
-import resolve from '@rollup/plugin-node-resolve';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
 import { terser } from 'rollup-plugin-terser';
 import css from 'rollup-plugin-css-only';
 import serve from 'rollup-plugin-serve';
@@ -58,8 +58,9 @@ export default {
 		// some cases you'll need additional configuration -
 		// consult the documentation for details:
 		// https://github.com/rollup/plugins/tree/master/packages/commonjs
-		resolve({
-			browser: true
+		nodeResolve({
+			browser: true,
+			dedupe: ['svelte', 'jsQR']
 		}),
 		commonjs(),
 
