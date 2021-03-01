@@ -84,7 +84,7 @@ export default {
 		OMT(),
 		
 		// clean public before bundling
-		production && del({ targets: 'public/*' })
+		production && del({ targets: 'public/*' }),
 	],
 	watch: {
 		clearScreen: false

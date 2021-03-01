@@ -3,17 +3,7 @@
 #include <emscripten.h>
 #include "quirc/quirc.h"
 
-struct nq_code_list {
-	const char	*err; /* global error */
-	struct nq_code	*codes;
-	unsigned int	 size;
-};
-
-struct nq_code {
-	const char		*err;
-	struct quirc_code	 qcode;
-	struct quirc_data	 qdata;
-};
+extern void jsPrintString(const char *s, uint16_t len);
 
 // load rgba image and convert to grayscale
 int load_img(struct quirc *qr, const uint8_t *img, int img_width, int img_height) {
@@ -41,90 +31,80 @@ int load_img(struct quirc *qr, const uint8_t *img, int img_width, int img_height
   return 0;
 }
 
-void
-nq_code_list_free(struct nq_code_list *list)
-{
-	if (list != NULL) {
-    free(list->codes);
-  }
-	free(list);
-}
-
 EMSCRIPTEN_KEEPALIVE
-struct nq_code_list *
+char *
 decode_qr_code(uint8_t* img, int img_width, int img_height) {
-  struct nq_code_list *list = NULL;
   struct quirc *qr;
-
   char *str;
-
-  str = "test sahaja";
-  goto out;
-  // allocate memory for list
-  list = calloc(1, sizeof(struct nq_code_list));
-	if (list == NULL) {
-    str = "fail allocate list";
-    goto out;
-  }
 
   // initiate quirc instance
   qr = quirc_new();
   
 	if (!qr) {
     str = "fail quirc_new()";
-		list->err = "Error quirc_new()";
-    goto out;
+    goto error;
 	}
 
   if(load_img(qr, img, img_width, img_height) == -1) {
-    str = "fail load_img()";
-    list->err = "Failed loading image";
-    goto out;
+    str = "fail quirc_new()";
+    goto error;
   }
 
   quirc_end(qr);
 
   int count = quirc_count(qr);
+
   if (count < 0) {
     str = "fail quirc_count()";
-		list->err = "Error quirc_count()";
-		goto out;
+		goto error;
 	}
 
-  list->size  = (unsigned int)count;
-  list->codes = calloc((size_t)list->size, sizeof(struct nq_code));
+  struct quirc_code code;
+  struct quirc_data data;
+  quirc_decode_error_t err;
 
-  if (list->codes == NULL) {
-		nq_code_list_free(list);
-		list = NULL;
-    str = "fail calloc codes";
-		goto out;
-	}
+  quirc_extract(qr, 0, &code);
 
-  for (int i = 0; i < count; i++) {
-    struct nq_code *nqcode = list->codes + i;
-    quirc_decode_error_t err;
+  err = quirc_decode(&code, &data);
 
-    quirc_extract(qr, i, &nqcode->qcode);
-
-    /* Decoding stage */
-    err = quirc_decode(&nqcode->qcode, &nqcode->qdata);
-    if (err == QUIRC_ERROR_DATA_ECC) {
-			quirc_flip(&nqcode->qcode);
-			err = quirc_decode(&nqcode->qcode, &nqcode->qdata);
-		}
-
-    if (err) {
-			nqcode->err = quirc_strerror(err);
-    }
-
-    str = "success";
+  if (err == QUIRC_ERROR_DATA_ECC) {
+      quirc_flip(&code);
+      err = quirc_decode(&code, &data);
   }
 
-out:
+  if (err) {
+    str = (char *) quirc_strerror(err);
+    goto error;
+  }
+  else {
+    uint8_t *dataPayloadBuffer = malloc(sizeof(uint8_t) * QUIRC_MAX_PAYLOAD);
+    uint8_t *dataPayloadBufferPtr = dataPayloadBuffer;
+    uint8_t *dataPayloadPtr = data.payload;
+    for (int j = 0; j < QUIRC_MAX_PAYLOAD; ++j) {
+        *dataPayloadBufferPtr = *dataPayloadPtr;
+        dataPayloadBufferPtr++;
+        dataPayloadPtr++;
+    }
+
+    str = (char *) dataPayloadBuffer;
+  }
+
   if (qr != NULL) {
     quirc_destroy(qr);
   }
 
-  return (list);
+  jsPrintString(str, strlen(str));
+
+  return (char *) str;
+error:
+  if (qr != NULL) {
+    quirc_destroy(qr);
+  }
+  char errCode[13] = "error_decode ";
+
+  str = strcat(errCode, str);
+
+  jsPrintString(str, strlen(str));
+
+  return (char *) str;
 }

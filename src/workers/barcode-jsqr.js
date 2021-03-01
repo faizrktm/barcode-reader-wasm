@@ -11,7 +11,11 @@ class BarcodeScanner {
   translate(imageData){
     try {
       const code = jsQR(imageData.data, imageData.width, imageData.height);
-      this.result = code;
+      if(code && code.data) {
+        this.result = code.data;
+      } else {
+        throw new Error('Not Found');
+      }
     } catch (_e) {
       console.log('ERROR TRANSLATE', _e);
       this.result = false;

@@ -1,32 +1,59 @@
 <style>
-  canvas {
-    display: none;
+  * {
+    box-sizing: border-box;
+  }
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .button-wrapper {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .button-wrapper > button:not(:last-child) {
+    margin-right: 1rem;
+  }
+  button {
+    background-color: #FF385C;
+    color: white;
+    border: none;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
   }
 </style>
 
 <script>
   import { onDestroy } from 'svelte';
+  
+  import Quirc from './Quirc.svelte';
+  import JsQR from './JsQR.svelte';
 
-  let video, canvas, barcoder;
+  let decoderType;
 
   onDestroy(() => {
     if(barcoder) barcoder.destroy();
   });
 
-  async function handleClick(){
-    // lazy load barcode processor when user click
-    barcoder = await import('../utils/barcode-procesor').then(
-      ({ default: Barcoder }) => new Barcoder(video, canvas, 'quirc')
-    );
-    barcoder.init();
+  function handleClick(type){
+    decoderType = type;
   }
 </script>
 
-<button on:click|once={handleClick}>Start Scanning</button>
+<div class="container">
+  <div class="button-wrapper">
+    <button on:click={() => handleClick('quirc')}>Scan with Quirc</button>
+    <button on:click={() => handleClick('jsqr')}>Scan with JSQR</button>
+  </div>
 
-<video bind:this={video}>
-  <track kind="captions">
-  Video stream not available.
-</video>
-
-<canvas bind:this={canvas}></canvas>
+  {#if decoderType === 'quirc'}
+  <Quirc />
+  {:else if decoderType === 'jsqr'}
+  <JsQR />
+  {/if}
+</div>

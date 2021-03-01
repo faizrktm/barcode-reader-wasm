@@ -1,11 +1,19 @@
+const videoOptions = {
+  width: 500,
+  height: 500,
+  facingMode: "environment",
+};
+
 class Barcoder {
   /**
    * 
-   * @param {*} video 
-   * @param {*} canvas 
+   * @param {Node} video 
+   * @param {Node} canvas 
    * @param {String} type - jsQR | quirc | builtin
    */
-  constructor(video, canvas, type) {
+  constructor(video, canvas, options) {
+    const { type, onSuccess } = options;
+  
     this.video = video;
     this.canvas = canvas;
     this.running = false;
@@ -17,6 +25,10 @@ class Barcoder {
     // initial value worker
     this.worker = null;
     this.decode = this.decode.bind(this)
+    
+    this.stopDecoding = false;
+
+    this.onSuccess = onSuccess;
   }
 
   async init(){
@@ -24,7 +36,7 @@ class Barcoder {
       // already initialize
       return;
     }
-    this.video.srcObject = await navigator.mediaDevices.getUserMedia({video: { width: 500, height: 500 }, audio: false});
+    this.video.srcObject = await navigator.mediaDevices.getUserMedia({video: videoOptions, audio: false});
     this.video.play();
 
     const videoTrack = this.video.srcObject.getVideoTracks()[0];
@@ -42,31 +54,33 @@ class Barcoder {
   }
 
   async initWorker(){
-    if(this.decoderType === 'quirc'){
-      this.worker = await import('comlink').then(Comlink => Comlink.wrap(
-        new Worker('../workers/barcode-quirc.js', { type: 'module' })
-      ));
-    } else if(this.decoderType === 'jsqr'){
-      this.worker = await import('comlink').then(Comlink => Comlink.wrap(
-        new Worker('../workers/barcode-jsqr.js', { type: 'module' })
-      ));
-    }
+    this.worker = await import('comlink').then(Comlink => {
+      console.log('selected decoder', this.decoderType);
+      if(this.decoderType === 'quirc'){
+        return Comlink.wrap(
+          new Worker('../workers/barcode-quirc.js', { type: 'module' })
+        )
+      } else if(this.decoderType === 'jsqr'){
+        return Comlink.wrap(
+          new Worker('../workers/barcode-jsqr.js', { type: 'module' })
+        )
+      }
+    });
   }
 
   requestTick(){
-    if(!this.running) {
+    if(!this.running && !this.stopDecoding) {
       requestAnimationFrame(this.decode);
     }
     this.running = true;
   }
 
-  async decode(timestamp){
-    console.log('TIMESTAMP', timestamp);
+  async decode(){
     try {
       const { width, height } = this.canvas;
       // draw the current video frame to canvas
       this.context.drawImage(this.video, 0, 0);
-      // get the image data (Uint8ClampedArray format)
+      // get the image data (rgba 4 channel)
       const imageData = this.context.getImageData(0, 0, width, height);
       // wait for image to be translated in worker
       await this.worker.translate(imageData);
@@ -81,6 +95,9 @@ class Barcoder {
       } else {
         console.log('decoded qr value:', code);
         // do something with the code
+        if(this.onSuccess){
+          this.onSuccess(code);
+        }
       }
     } catch (error) {
       console.log('SOMETHING WENT WRONG', error.message);
@@ -92,6 +109,7 @@ class Barcoder {
     if(this.requestId){
       cancelAnimationFrame(this.requestId);
     }
+    this.stopDecoding = true;
   }
 }
 
