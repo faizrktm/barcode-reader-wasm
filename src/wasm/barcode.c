@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <emscripten.h>
 #include "quirc/quirc.h"
 
@@ -32,22 +33,24 @@ int load_img(struct quirc *qr, const uint8_t *img, int img_width, int img_height
 }
 
 EMSCRIPTEN_KEEPALIVE
-char *
-decode_qr_code(uint8_t* img, int img_width, int img_height) {
+void decode_qr_code(uint8_t* img, int img_width, int img_height) {
   struct quirc *qr;
   char *str;
+  unsigned short fail = 0;
 
   // initiate quirc instance
   qr = quirc_new();
   
 	if (!qr) {
     str = "fail quirc_new()";
-    goto error;
+    fail = 1;
+    goto out;
 	}
 
   if(load_img(qr, img, img_width, img_height) == -1) {
     str = "fail quirc_new()";
-    goto error;
+    fail = 1;
+    goto out;
   }
 
   quirc_end(qr);
@@ -56,7 +59,8 @@ decode_qr_code(uint8_t* img, int img_width, int img_height) {
 
   if (count < 0) {
     str = "fail quirc_count()";
-		goto error;
+    fail = 1;
+		goto out;
 	}
 
   struct quirc_code code;
@@ -74,7 +78,8 @@ decode_qr_code(uint8_t* img, int img_width, int img_height) {
 
   if (err) {
     str = (char *) quirc_strerror(err);
-    goto error;
+    fail = 1;
+    goto out;
   }
   else {
     uint8_t *dataPayloadBuffer = malloc(sizeof(uint8_t) * QUIRC_MAX_PAYLOAD);
@@ -85,26 +90,25 @@ decode_qr_code(uint8_t* img, int img_width, int img_height) {
         dataPayloadBufferPtr++;
         dataPayloadPtr++;
     }
-
     str = (char *) dataPayloadBuffer;
+    fail = 0;
   }
 
+out:
   if (qr != NULL) {
     quirc_destroy(qr);
   }
 
-  jsPrintString(str, strlen(str));
+  char *result;
 
-  return (char *) str;
-error:
-  if (qr != NULL) {
-    quirc_destroy(qr);
+  if(fail == 1){
+    char errCode[13] = "error_decode ";
+    result = (char*) malloc(snprintf(NULL, 0, "%s %s", errCode, str) + 1);
+    sprintf(result, "%s %s", errCode, str);
+
+  } else {
+    result = str;
   }
-  char errCode[13] = "error_decode ";
 
-  str = strcat(errCode, str);
-
-  jsPrintString(str, strlen(str));
-
-  return (char *) str;
+  jsPrintString(result, strlen(result));
 }
