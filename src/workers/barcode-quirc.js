@@ -10,6 +10,20 @@ class BarcodeScanner {
     this.result;
     this.memoryFromWasm = null;
     this.handlePrintString = this.handlePrintString.bind(this);
+    this.wasmLoader = null;
+  }
+
+  async init(){
+    if (this.wasmLoader) return;
+
+    this.wasmLoader = await wasm({
+      env: {
+        memory: new WebAssembly.Memory({ initial: 1 }),
+        STACKTOP: 0,
+        jsPrintString: this.handlePrintString,
+      },
+      wasi_snapshot_preview1: { fd_write: console.log },
+    });
   }
 
   /**
@@ -39,7 +53,10 @@ class BarcodeScanner {
     }
   }
 
-  async translate(imageData){
+  translate(imageData){
+    if(!this.wasmLoader) {
+      throw new Error('WASM not loaded');
+    }
     let p = null;
     let freeFunc;
     try {
@@ -51,14 +68,7 @@ class BarcodeScanner {
             free,
           } 
         } 
-      } = await wasm({
-        env: {
-          memory: new WebAssembly.Memory({ initial: 1 }),
-          STACKTOP: 0,
-          jsPrintString: this.handlePrintString,
-        },
-        wasi_snapshot_preview1: { fd_write: console.log },
-      });
+      } = this.wasmLoader;
       freeFunc = free;
 
       // define memory for later use for translation.

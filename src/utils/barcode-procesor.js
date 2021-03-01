@@ -55,7 +55,6 @@ class Barcoder {
 
   async initWorker(){
     this.worker = await import('comlink').then(Comlink => {
-      console.log('selected decoder', this.decoderType);
       if(this.decoderType === 'quirc'){
         return Comlink.wrap(
           new Worker('../workers/barcode-quirc.js', { type: 'module' })
@@ -66,6 +65,10 @@ class Barcoder {
         )
       }
     });
+
+    if(this.decoderType === 'quirc'){
+      await this.worker.init();
+    }
   }
 
   requestTick(){
