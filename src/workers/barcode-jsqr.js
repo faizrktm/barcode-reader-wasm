@@ -11,7 +11,7 @@ class BarcodeScanner {
   }
 
   async init(){
-    const { default: jsQRModule } = await import('jsQR');
+    const { default: jsQRModule } = await import('jsqr');
     this.jsQR = jsQRModule;
   }
 
