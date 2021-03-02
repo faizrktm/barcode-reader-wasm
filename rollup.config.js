@@ -49,6 +49,19 @@ export default {
 				dev: !production
 			}
 		}),
+		
+		// If you have external dependencies installed from
+		// npm, you'll most likely need these plugins. In
+		// some cases you'll need additional configuration -
+		// consult the documentation for details:
+		// https://github.com/rollup/plugins/tree/master/packages/commonjs
+		nodeResolve({
+			dedupe: ['svelte']
+		}),
+		commonjs({
+			include: 'node_modules/**',
+		}),
+
 		// we'll extract any component CSS out into
 		// a separate file - better for performance
 		css({ output: 'index.css' }),
@@ -75,16 +88,6 @@ export default {
 		
 		// clean public before bundling
 		production && del({ targets: 'public/*' }),
-
-		// If you have external dependencies installed from
-		// npm, you'll most likely need these plugins. In
-		// some cases you'll need additional configuration -
-		// consult the documentation for details:
-		// https://github.com/rollup/plugins/tree/master/packages/commonjs
-		nodeResolve({
-			dedupe: ['svelte']
-		}),
-		commonjs(),
 	],
 	watch: {
 		clearScreen: false
