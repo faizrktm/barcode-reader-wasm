@@ -65,10 +65,7 @@ class Barcoder {
         )
       }
     });
-
-    if(this.decoderType === 'quirc'){
-      await this.worker.init();
-    }
+    await this.worker.init();
   }
 
   requestTick(){

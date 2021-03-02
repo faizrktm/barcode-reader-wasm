@@ -60,7 +60,7 @@ export default {
 		// https://github.com/rollup/plugins/tree/master/packages/commonjs
 		nodeResolve({
 			browser: true,
-			dedupe: ['svelte', 'jsQR']
+			dedupe: ['svelte']
 		}),
 		commonjs(),
 
