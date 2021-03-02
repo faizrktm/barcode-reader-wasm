@@ -1,5 +1,4 @@
 import * as Comlink from 'comlink';
-import { compute_rest_props } from 'svelte/internal';
 
 class BarcodeScanner {
   get code(){
