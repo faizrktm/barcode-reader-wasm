@@ -57,11 +57,11 @@ class Barcoder {
     this.worker = await import('comlink').then(Comlink => {
       if(this.decoderType === 'quirc'){
         return Comlink.wrap(
-          new Worker('../workers/barcode-quirc.js', { type: 'module' })
+          new Worker(new URL('../workers/barcode-quirc.js', import.meta.url))
         )
       } else if(this.decoderType === 'jsqr'){
         return Comlink.wrap(
-          new Worker('../workers/barcode-jsqr.js', { type: 'module' })
+          new Worker(new URL('../workers/barcode-jsqr.js', import.meta.url))
         )
       }
     });
