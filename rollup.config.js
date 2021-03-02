@@ -47,17 +47,21 @@ export default {
 			compilerOptions: {
 				// enable run-time checks when not in production
 				dev: !production
-			}
+			},
+			include: 'src/**/*.svelte',
 		}),
-		
+
+		// Tell any third-party plugins that we're building for the browser
+		nodeResolve({
+			browser: true,
+			dedupe: ['svelte']
+		}),
+
 		// If you have external dependencies installed from
 		// npm, you'll most likely need these plugins. In
 		// some cases you'll need additional configuration -
 		// consult the documentation for details:
 		// https://github.com/rollup/plugins/tree/master/packages/commonjs
-		nodeResolve({
-			dedupe: ['svelte']
-		}),
 		commonjs({
 			include: 'node_modules/**',
 		}),
