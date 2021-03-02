@@ -1,4 +1,4 @@
-# Barcode Reader jsQR and quirc (C with WASM) through Web Worker
+# QR Reader / Scanner jsQR and quirc (C with WASM) through Web Worker
 
 This project is experimental and for educational purpose to see performance of WASM and JS for decode QR Code. Using:
 
