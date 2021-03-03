@@ -36,21 +36,25 @@ class Barcoder {
       // already initialize
       return;
     }
-    this.video.srcObject = await navigator.mediaDevices.getUserMedia({video: videoOptions, audio: false});
-    this.video.play();
+    try {
+      this.video.srcObject = await navigator.mediaDevices.getUserMedia({video: videoOptions, audio: false});
+      this.video.play();
 
-    const videoTrack = this.video.srcObject.getVideoTracks()[0];
-    const { height, width } = videoTrack.getSettings();
+      const videoTrack = this.video.srcObject.getVideoTracks()[0];
+      const { height, width } = videoTrack.getSettings();
 
-    // setting canvas width and height
-    this.canvas.width = width;
-    this.canvas.height = height;
+      // setting canvas width and height
+      this.canvas.width = width;
+      this.canvas.height = height;
 
-    this.context = this.canvas.getContext('2d');
-    await this.initWorker();
+      this.context = this.canvas.getContext('2d');
+      await this.initWorker();
 
-    // kick off
-    this.requestTick();
+      // kick off
+      this.requestTick();
+    } catch (error) {
+      console.log('ERROR INIT', error);
+    }
   }
 
   async initWorker(){

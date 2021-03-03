@@ -32,7 +32,7 @@
   });
 </script>
 
-<video bind:this={video}>
+<video bind:this={video} autoplay playsinline>
   <track kind="captions">
   Video stream not available.
 </video>
