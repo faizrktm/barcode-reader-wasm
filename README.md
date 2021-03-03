@@ -8,6 +8,9 @@ This project is experimental and for educational purpose to see performance of W
 4. Rollup for bundler
 5. Decoder run through Web Worker, it is off main thread!
 
+## :warning: Please read
+If you see error when using quirc scanner on safari / wasm not properly loaded. It is due to the rollup wasm loader only use `WebAssembly.instantiateStreaming()` without fallback and not supported on safari. So please use Chrome or other browser instead. :v:
+
 ## Instalation
 
 install dependencies and devDependencies
