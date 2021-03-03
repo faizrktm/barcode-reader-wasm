@@ -58,18 +58,22 @@ class Barcoder {
   }
 
   async initWorker(){
-    this.worker = await import('comlink').then(Comlink => {
-      if(this.decoderType === 'quirc'){
-        return Comlink.wrap(
-          new Worker(new URL('../workers/barcode-quirc.js', import.meta.url))
-        )
-      } else if(this.decoderType === 'jsqr'){
-        return Comlink.wrap(
-          new Worker(new URL('../workers/barcode-jsqr.js', import.meta.url))
-        )
-      }
-    });
-    await this.worker.init();
+    try {
+      this.worker = await import('comlink').then(Comlink => {
+        if(this.decoderType === 'quirc'){
+          return Comlink.wrap(
+            new Worker(new URL('../workers/barcode-quirc.js', import.meta.url))
+          )
+        } else if(this.decoderType === 'jsqr'){
+          return Comlink.wrap(
+            new Worker(new URL('../workers/barcode-jsqr.js', import.meta.url))
+          )
+        }
+      });
+      await this.worker.init();
+    } catch (error) {
+      console.log('ERROR INIT WORKER', error);
+    }
   }
 
   requestTick(){

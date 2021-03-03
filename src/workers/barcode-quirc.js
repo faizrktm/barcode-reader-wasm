@@ -16,14 +16,20 @@ class BarcodeScanner {
   async init(){
     if (this.wasmLoader) return;
 
-    this.wasmLoader = await wasm({
-      env: {
-        memory: new WebAssembly.Memory({ initial: 1 }),
-        STACKTOP: 0,
-        jsPrintString: this.handlePrintString,
-      },
-      wasi_snapshot_preview1: { fd_write: console.log },
-    });
+    try {
+
+      const importObject = {
+        env: {
+          memory: new WebAssembly.Memory({ initial: 1 }),
+          STACKTOP: 0,
+          jsPrintString: this.handlePrintString,
+        },
+        wasi_snapshot_preview1: { fd_write: console.log },
+      };
+      this.wasmLoader = await wasm(importObject);
+    } catch (error) {
+      console.log('ERROR INIT WASM', error);
+    }
   }
 
   /**
